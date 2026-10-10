@@ -437,7 +437,7 @@ function openM(p){var M=document.getElementById('mdl'),B=M.querySelector('.mbox-
 function closeM(){var M=document.getElementById('mdl');M.hidden=true;document.body.style.overflow='';if(lastF&&lastF.focus)lastF.focus()}
 (function(){var M=document.getElementById('mdl');M.addEventListener('click',function(e){if(e.target===M||e.target.closest('.mx'))closeM()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!M.hidden)closeM()})})();
 function card(p,f,i,k){var d=document.createElement('div');d.className='pc'+(f?' f':'');
-d.innerHTML='<div class="av">'+ini(p[1]||p[0])+'</div><h3></h3><div class="al"></div><p></p><label class="up">Add photo<input type="file" accept="image/*"></label>';
+d.innerHTML='<div class="av">'+ini(p[1]||p[0])+'</div><h3></h3><div class="al"></div><p></p>';
 d.querySelector('h3').textContent=p[0];if(p[3]){var av=d.querySelector('.av');av.innerHTML='<img alt="">';av.querySelector('img').src=p[3];av.querySelector('img').alt=p[0]}if(p[1])d.querySelector('.al').textContent='"'+p[1]+'"';else d.querySelector('.al').remove();if(p[2])d.querySelector('p').textContent=p[2];else d.querySelector('p').remove();
 var lk=L[p[0]]||L[p[1]];if(lk){var w=document.createElement('div');w.className='lk';[['Instagram',lk[0]],['YouTube',lk[1]]].forEach(function(x){if(x[1]){var a=document.createElement('a');a.href=x[1];a.textContent=x[0];a.target='_blank';a.rel='noopener';w.appendChild(a)}});d.insertBefore(w,d.querySelector('.up'))}
 d.querySelector('input').addEventListener('change',function(e){var fl=e.target.files[0];if(!fl)return;var r=new FileReader();r.onload=function(){d.querySelector('.av').innerHTML='<img alt="">';d.querySelector('img').src=r.result;d.querySelector('img').alt=p[0]};r.readAsDataURL(fl)});
