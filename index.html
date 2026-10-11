@@ -184,6 +184,24 @@ section{padding:56px 0}.hero{min-height:80vh}
 .tcard.champion .tph{background:linear-gradient(135deg,#7a5500,#ffd24a);font-size:64px}
 .tcard.champion .tn{color:#ffe27a}.tcard.champion .tt{color:#ffd24a}
 .post .pd{color:var(--mute);font-size:12px;margin-left:6px}.post .rm{margin-top:8px;font-size:12px;color:var(--mute);background:none;border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+#honours .honours{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}#honours .h{padding:26px 20px}#honours .h b{font-size:clamp(40px,4.6vw,60px)}
+@media(max-width:760px){#honours .honours{grid-template-columns:repeat(2,minmax(0,1fr))}#honours .h{border-right:0;border-bottom:1px solid var(--line)}#honours .h:last-child{grid-column:1/-1;border-bottom:0}}
+nav .wrap>div{display:flex;justify-content:flex-start;gap:4px;align-items:center}nav .wrap>div a:first-child{margin-left:auto}
+nav .wrap>div a{margin-left:0;padding:8px 14px;border-radius:999px;color:var(--ink);font-size:15px;font-weight:500;transition:background .2s,color .2s;flex:none;border:1px solid transparent}
+nav .wrap>div a:hover{background:#bbf14422;color:var(--ember)}
+nav .wrap>div a.on{background:var(--ember);color:#0a0c05;font-weight:700;box-shadow:0 0 18px #bbf14455}
+@media(max-width:760px){nav .wrap>div a{padding:7px 11px;font-size:14px}}
+nav .wrap>div{position:relative}
+@media(min-width:900px){nav .wrap>div a{padding:6px 10px;font-size:14px}nav .logo{font-size:24px}}
+@media(min-width:1100px){nav .wrap>div{gap:2px}nav .wrap>div a{padding:6px 8px;font-size:13.5px}nav .logo{font-size:22px}nav .wrap{gap:10px}}
+.lbn{color:var(--mute);font-size:14px;margin:0 0 14px}
+.lbf{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}.lbf input{flex:1;min-width:200px;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.lbf .lbm{flex-basis:100%;margin:0}
+.lbm{color:var(--gold);font-size:14px;margin:0 0 14px}
+.lbl{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
+.lbr{display:grid;grid-template-columns:40px 1fr auto auto;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}.lbr:last-child{border-bottom:0}
+.lbr .rk{font:900 24px 'Barlow Condensed',Impact,sans-serif;color:var(--gold)}.lbr .nm{font-weight:600;overflow-wrap:anywhere}.lbr .ct{color:var(--mute);font-size:14px}
+.lbr.me{background:#bbf1441a}.lbr .rm{font-size:12px;color:var(--mute);background:none;border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+@media(max-width:560px){.lbr{grid-template-columns:32px 1fr auto}.lbr .rm{grid-column:2/-1;justify-self:start}}
 </style>
 </head>
 <body>
@@ -270,7 +288,9 @@ section{padding:56px 0}.hero{min-height:80vh}
 <div class="cv"><div class="qz" id="qz"></div><div class="rv" id="rv"></div></div>
 <h3 class="sh">Your collection <span id="cc"></span></h3>
 <div class="cgrid" id="col"></div>
-<p class="note">Cards are just for fun. BGMI player cards show initials until photos are added.</p>
+<h3 class="sh" id="lbt" hidden>Leaderboard</h3>
+<div id="lb"></div>
+<p class="note">Cards are just for fun.</p>
 </div></section>
 
 <section id="honours"><div class="wrap">
@@ -280,7 +300,11 @@ section{padding:56px 0}.hero{min-height:80vh}
 <div class="h"><b>11x</b><span>Championship titles</span></div>
 <div class="h"><b>4x</b><span>Best Content Group</span></div>
 <div class="h"><b>365K</b><span>Instagram followers</span></div>
-</div></div></section>
+<div class="h"><b>1.4M+</b><span>YouTube subscribers</span></div>
+<div class="h"><b>124K+</b><span>X followers</span></div>
+</div>
+<p class="note">Follower numbers are approximate and were checked in 2026. They change every day.</p>
+</div></section>
 
 <section id="trophies"><div class="wrap">
 <h2>Trophy cabinet</h2>
@@ -365,7 +389,7 @@ function hk(){var k='';try{var m=location.hash.match(/admin=([^&]+)/);if(m){sess
 function hd(extra){var h={'Content-Type':'application/json'},k=hk();if(k)h['x-admin-key']=k;return h}
 window.API={
  key:hk,
- get:function(kind){return fetch('/api/'+kind,{cache:'no-store',headers:{Accept:'application/json'}}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){if(!j||!Array.isArray(j.items))throw 0;return j.items})},
+ get:function(kind){var h={Accept:'application/json'},k=hk();if(k)h['x-admin-key']=k;return fetch('/api/'+kind,{cache:'no-store',headers:h}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){if(!j||!Array.isArray(j.items))throw 0;return j.items})},
  post:function(kind,body){return fetch('/api/'+kind,{method:'POST',headers:hd(),body:JSON.stringify(body)}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok){var e=new Error(j.error||'error');e.status=r.status;throw e}return j})})},
  del:function(kind,id){return fetch('/api/'+kind+'?id='+encodeURIComponent(id),{method:'DELETE',headers:hd()}).then(function(r){if(!r.ok)throw 0})}
 };
@@ -604,7 +628,7 @@ function showQ(){
 function answer(o,q){
  st={d:today(),pick:o,ok:o===q[1]};
  if(st.ok){var c=pick();owned[c.id]=(owned[c.id]||0)+1;save();st.card=c.id}
- saveSt();showQ();showCard(true);renderCol()}
+ saveSt();showQ();showCard(true);renderCol();lbSync()}
 function backCard(lost){
  rv.appendChild(el('h3','',lost?'Better luck next time':'Your daily card'));
  var b=cardEl(null,'back');b.querySelector('.tt').textContent=lost?'No card today':'Answer correctly to unlock';rv.appendChild(b);
@@ -616,6 +640,58 @@ function showCard(anim){
  backCard(st.d===today()&&!st.ok)}
 renderCol();showQ();showCard(false);
 setInterval(function(){showQ();showCard(false)},60000);
+var LBK='s8ul-fan-lb',lb={},lbOk=false,lbRows=[],lbFirst=true,lbEl=document.getElementById('lb'),lbT=document.getElementById('lbt');
+try{lb=JSON.parse(localStorage.getItem(LBK)||'{}')||{}}catch(e){}
+function lbSave(){try{localStorage.setItem(LBK,JSON.stringify(lb))}catch(e){}}
+function stats(){var c=0,t=0;ALL.forEach(function(x){var k=owned[x.id]||0;if(k){c++;t+=k}});return{c:c,t:t}}
+function tokGen(){var a=new Uint8Array(16);(window.crypto||{}).getRandomValues?crypto.getRandomValues(a):a.forEach(function(_,i){a[i]=Math.floor(Math.random()*256)});return Array.prototype.map.call(a,function(x){return('0'+x.toString(16)).slice(-2)}).join('')}
+function lbRender(){
+ lbT.hidden=!lbOk;lbEl.innerHTML='';if(!lbOk)return;
+ var me=lb.n?lb.n.toLowerCase():'';
+ lbEl.appendChild(el('p','lbn','Names are chosen by fans. Cards are counted from each fan\u2019s own browser, and a fan can win at most one card a day.'));
+ if(!lb.tok){
+  var f=document.createElement('form');f.className='lbf';
+  var i=document.createElement('input');i.placeholder='Pick a name for the leaderboard';i.maxLength=20;i.required=true;i.setAttribute('aria-label','Leaderboard name');
+  var b=el('button','btn p','Join leaderboard');b.type='submit';var m=el('p','lbm','');
+  f.appendChild(i);f.appendChild(b);f.appendChild(m);
+  f.addEventListener('submit',function(e){e.preventDefault();var n=i.value.trim();if(n.length<2){m.textContent='Please use at least 2 characters.';return}
+   var tok=tokGen(),s=stats();
+   API.post('leaderboard',{tok:tok,n:n,c:s.c,t:s.t}).then(function(){lb={tok:tok,n:n};lbSave();lbLoad()}).catch(function(err){m.textContent=err&&err.status===409?'That name is taken. Please try another.':(err&&err.status===429?'Please wait a minute and try again.':'Could not join. Please try again.')})});
+  lbEl.appendChild(f)}
+ else lbEl.appendChild(el('p','lbm','You are on the leaderboard as '+lb.n+'. Your count updates when you win a card.'));
+ var box=el('div','lbl');
+ if(!lbRows.length)box.appendChild(el('div','empty','No one is on the leaderboard yet. Be the first.'));
+ lbRows.slice(0,10).forEach(function(r,idx){
+  var row=el('div','lbr'+(me&&r.n.toLowerCase()===me?' me':''));
+  row.appendChild(el('span','rk',String(idx+1)));row.appendChild(el('span','nm',r.n));
+  row.appendChild(el('span','ct',r.c+' of '+ALL.length+' cards'));
+  if(r.id&&API.key()){var rm=el('button','rm','Remove');rm.type='button';rm.addEventListener('click',function(){if(confirm('Remove '+r.n+'?'))API.del('leaderboard',r.id).then(lbLoad).catch(function(){alert('Could not remove.')})});row.appendChild(rm)}
+  box.appendChild(row)});
+ lbEl.appendChild(box)}
+function lbLoad(){API.get('leaderboard').then(function(items){lbOk=true;lbRows=items;lbRender();if(lbFirst){lbFirst=false;lbSync()}}).catch(function(){lbOk=false;lbRender()})}
+function lbSync(){if(!lb.tok||!lbOk)return;var s=stats();API.post('leaderboard',{tok:lb.tok,n:lb.n,c:s.c,t:s.t}).then(function(){return API.get('leaderboard')}).then(function(items){lbRows=items;lbRender()}).catch(function(){})}
+lbLoad();setInterval(lbLoad,120000);
+
+})();
+</script>
+<script>
+(function(){
+var nav=document.querySelector('nav .wrap>div');if(!nav)return;
+var links=[].slice.call(nav.querySelectorAll('a[href^="#"]')),items=links.map(function(a){return{a:a,s:document.getElementById(a.getAttribute('href').slice(1))}}).filter(function(x){return x.s});
+var cur=null,tick=false;
+function setOn(a){
+ if(cur===a)return;cur=a;
+ links.forEach(function(l){l.classList.toggle('on',l===a);if(l===a)l.setAttribute('aria-current','true');else l.removeAttribute('aria-current')});
+ if(a){var left=a.offsetLeft-(nav.clientWidth-a.offsetWidth)/2;try{nav.scrollTo({left:left,behavior:'smooth'})}catch(e){nav.scrollLeft=left}}}
+function spy(){
+ tick=false;var y=130,best=null;
+ items.forEach(function(x){var r=x.s.getBoundingClientRect();if(r.top<=y&&r.bottom>y)best=x.a});
+ if(window.innerHeight+window.scrollY>=document.body.scrollHeight-4&&items.length)best=items[items.length-1].a;
+ setOn(best)}
+function req(){if(!tick){tick=true;requestAnimationFrame(spy)}}
+addEventListener('scroll',req,{passive:true});addEventListener('resize',req);
+nav.addEventListener('click',function(e){var a=e.target.closest('a');if(a)setOn(a)});
+spy();
 })();
 </script>
 </body>
