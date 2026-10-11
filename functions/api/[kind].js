@@ -1,8 +1,9 @@
-// Cloudflare Pages Function: shared storage for the Fan wall and Match Center.
-// Routes: GET/POST/DELETE /api/wall and /api/matches
+// Cloudflare Pages Function: shared storage for the Fan wall, Match Center and card Leaderboard.
+// Routes: GET/POST/DELETE /api/wall, /api/matches and /api/leaderboard
 // Needs: a KV namespace bound as DATA, and an ADMIN_KEY secret (for moderation).
 
-const LIMITS = { wall: { max: 500 }, matches: { max: 300 } };
+const LIMITS = { wall: { max: 500 }, matches: { max: 300 }, leaderboard: { max: 1000 } };
+const LAUNCH = Date.UTC(2026, 9, 10); // the card game started on 10 Oct 2026 (one card per day at most)
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
@@ -17,6 +18,11 @@ const clean = (v, n) =>
     .trim()
     .slice(0, n);
 
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, '0')).join('');
+}
+
 export async function onRequest({ request, env, params }) {
   const kind = params.kind;
   if (!LIMITS[kind]) return json({ error: 'not found' }, 404);
@@ -27,9 +33,26 @@ export async function onRequest({ request, env, params }) {
   const read = async () => {
     try { return JSON.parse((await env.DATA.get(key)) || '[]') || []; } catch (e) { return []; }
   };
+  const write = (items) => env.DATA.put(key, JSON.stringify(items.slice(0, LIMITS[kind].max)));
+  const ipLimit = async () => {
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const rk = 'rl:' + kind + ':' + ip;
+    if (await env.DATA.get(rk)) return true;
+    await env.DATA.put(rk, '1', { expirationTtl: 60 });
+    return false;
+  };
 
   if (request.method === 'GET') {
-    return json({ items: await read() });
+    const items = await read();
+    if (kind === 'leaderboard') {
+      const top = items
+        .slice()
+        .sort((a, b) => b.c - a.c || b.t - a.t || a.u - b.u)
+        .slice(0, 50)
+        .map((x) => (isAdmin ? { id: x.id, n: x.n, c: x.c, t: x.t } : { n: x.n, c: x.c, t: x.t }));
+      return json({ items: top });
+    }
+    return json({ items });
   }
 
   if (request.method === 'POST') {
@@ -37,12 +60,37 @@ export async function onRequest({ request, env, params }) {
     try { b = await request.json(); } catch (e) { return json({ error: 'bad request' }, 400); }
     if (b && b.website) return json({ ok: true }); // honeypot: bots fill this hidden field
 
-    if (!isAdmin) {
-      const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-      const rk = 'rl:' + kind + ':' + ip;
-      if (await env.DATA.get(rk)) return json({ error: 'too many requests' }, 429);
-      await env.DATA.put(rk, '1', { expirationTtl: 60 });
+    if (kind === 'leaderboard') {
+      const tok = clean(b.tok, 64);
+      const n = clean(b.n, 20);
+      const c = Math.floor(Number(b.c));
+      const t = Math.floor(Number(b.t));
+      if (tok.length < 16 || n.length < 2) return json({ error: 'missing fields' }, 400);
+      // A fan can win at most one card a day, so totals are capped by the days since launch.
+      const maxT = Math.floor((Date.now() - LAUNCH) / 864e5) + 2;
+      if (![c, t].every(Number.isFinite) || c < 0 || t < c || c > 100 || t > maxT) {
+        return json({ error: 'invalid numbers' }, 400);
+      }
+      const k = await sha256(tok);
+      const items = await read();
+      const mine = items.find((x) => x.k === k);
+      if (items.some((x) => x.k !== k && x.n.toLowerCase() === n.toLowerCase())) {
+        return json({ error: 'name taken' }, 409);
+      }
+      if (mine) {
+        mine.n = n;
+        mine.c = Math.max(mine.c, c);
+        mine.t = Math.max(mine.t, t);
+        mine.u = Date.now();
+      } else {
+        if (!isAdmin && (await ipLimit())) return json({ error: 'too many requests' }, 429);
+        items.unshift({ id: crypto.randomUUID(), k, n, c, t, u: Date.now() });
+      }
+      await write(items);
+      return json({ ok: true });
     }
+
+    if (!isAdmin && (await ipLimit())) return json({ error: 'too many requests' }, 429);
 
     const item = { id: crypto.randomUUID(), t: Date.now() };
     if (kind === 'wall') {
@@ -63,15 +111,14 @@ export async function onRequest({ request, env, params }) {
     }
     const items = await read();
     items.unshift(item);
-    await env.DATA.put(key, JSON.stringify(items.slice(0, LIMITS[kind].max)));
+    await write(items);
     return json({ ok: true, id: item.id });
   }
 
   if (request.method === 'DELETE') {
     if (!isAdmin) return json({ error: 'forbidden' }, 403);
     const id = new URL(request.url).searchParams.get('id');
-    const items = (await read()).filter((x) => x.id !== id);
-    await env.DATA.put(key, JSON.stringify(items));
+    await write((await read()).filter((x) => x.id !== id));
     return json({ ok: true });
   }
 
