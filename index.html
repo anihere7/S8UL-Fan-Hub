@@ -203,10 +203,21 @@ nav .wrap>div{position:relative}
 .lbr.me{background:#bbf1441a}.lbr .rm{font-size:12px;color:var(--mute);background:none;border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
 @media(max-width:560px){.lbr{grid-template-columns:32px 1fr auto}.lbr .rm{grid-column:2/-1;justify-self:start}}
 .mt .ml{display:inline-block;margin-top:10px;color:var(--gold);font-weight:600;font-size:14px;text-decoration:none}.mt .ml:hover{text-decoration:underline}
+.vts{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.vc{position:relative;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px 22px;text-align:center}
+.vc .vn{position:absolute;top:14px;left:18px;font:900 28px 'Barlow Condensed',Impact,sans-serif;color:var(--gold)}
+.vph{width:132px;height:132px;border-radius:50%;margin:0 auto 16px;background:linear-gradient(135deg,var(--ember),#6fa012) center/cover;border:2px solid var(--ember);box-shadow:0 0 28px #bbf14444;overflow:hidden;display:grid;place-items:center}
+.vph img{width:100%;height:100%;object-fit:cover}
+#vph1{background:var(--logo) center/78% no-repeat,#0b0d07}
+.vcat{color:var(--gold);font-weight:600;font-size:15px}
+.vnm{font:900 clamp(40px,6vw,56px)/1.05 'Barlow Condensed',Impact,sans-serif;margin:4px 0 16px}
+.vc .btn{display:inline-block;text-decoration:none}
+.intro .bd{margin-bottom:8px}
+.note a{color:var(--gold)}
 </style>
 </head>
 <body>
-<nav><div class="wrap"><span class="logo"><i class="nl"></i>S8UL FAN HUB</span><div><a href="#about">About</a><a href="#news">News</a><a href="#founders">Founders</a><a href="#teams">Teams</a><a href="#matches">Matches</a><a href="#creators">Creators</a><a href="#cards">Cards</a><a href="#honours">Honours</a><a href="#trophies">Trophies</a><a href="#journey">Journey</a><a href="#partners">Partners</a><a href="#wall">Fan wall</a><a href="#portfolio">Maker</a></div></div></nav>
+<nav><div class="wrap"><span class="logo"><i class="nl"></i>S8UL FAN HUB</span><div><a href="#about">About</a><a href="#news">News</a><a href="#vote">Voting</a><a href="#founders">Founders</a><a href="#teams">Teams</a><a href="#matches">Matches</a><a href="#creators">Creators</a><a href="#cards">Cards</a><a href="#honours">Honours</a><a href="#trophies">Trophies</a><a href="#journey">Journey</a><a href="#partners">Partners</a><a href="#wall">Fan wall</a><a href="#portfolio">Maker</a></div></div></nav>
 
 <div class="hero"><canvas id="c" aria-hidden="true"></canvas>
 <div class="wrap hg"><div class="ht">
@@ -238,6 +249,17 @@ nav .wrap>div{position:relative}
 <p class="intro">Today's S8UL news, Monday, October 12, 2026.</p>
 <div class="nf" id="nf"></div>
 <div class="ng" id="ng"></div>
+</div></section>
+
+<section id="vote"><div class="wrap">
+<h2>Voting</h2>
+<p class="intro"><span class="bd">Voting reminder for the day</span><br>Back S8UL at the Esports Awards. Three votes to cast today.</p>
+<div class="vts">
+<div class="vc"><span class="vn">1</span><div class="vph" id="vph1" role="img" aria-label="S8UL logo"></div><div class="vcat">Content Group of the Year</div><div class="vnm">S8UL</div><a class="btn p" href="https://esportsawards.com" target="_blank" rel="noopener">Vote now</a></div>
+<div class="vc"><span class="vn">2</span><div class="vph" id="vph2" role="img" aria-label="Thug"></div><div class="vcat">Esports Personality of the Year</div><div class="vnm">Thug</div><a class="btn p" href="https://esportsawards.com" target="_blank" rel="noopener">Vote now</a></div>
+<div class="vc"><span class="vn">3</span><div class="vph" id="vph3" role="img" aria-label="Snax"></div><div class="vcat">Streamer of the Year</div><div class="vnm">Snax</div><a class="btn p" href="https://esportsawards.com" target="_blank" rel="noopener">Vote now</a></div>
+</div>
+<p class="note">Voting link: <a href="https://esportsawards.com" target="_blank" rel="noopener">esportsawards.com</a></p>
 </div></section>
 
 <section id="founders"><div class="wrap">
@@ -697,6 +719,15 @@ function req(){if(!tick){tick=true;requestAnimationFrame(spy)}}
 addEventListener('scroll',req,{passive:true});addEventListener('resize',req);
 nav.addEventListener('click',function(e){var a=e.target.closest('a');if(a)setOn(a)});
 spy();
+})();
+</script>
+<script>
+(function(){
+var D=window.S8D;if(!D)return;
+function put(id,url,alt){if(!url)return;var el=document.getElementById(id);if(!el)return;el.style.background='none';var i=document.createElement('img');i.src=url;i.alt=alt;el.appendChild(i)}
+var th=(D.F||[]).filter(function(p){return p[1]==='8Bit Thug'})[0];
+var sn=(D.C||[]).filter(function(p){return p[0]==='Snax Gaming'})[0];
+put('vph2',th&&th[3],'Thug');put('vph3',sn&&sn[3],'Snax');
 })();
 </script>
 </body>
