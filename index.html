@@ -227,10 +227,20 @@ nav .wrap>div{position:relative}
 .ifx .btn{display:inline-block;text-decoration:none;margin-left:auto}
 @media(max-width:560px){.ifx .btn{margin-left:0}}
 .esx img{height:64px;border-radius:12px}
+.lgb{flex:none;background:var(--ember);color:#0a0c05;border:0;border-radius:999px;padding:7px 14px;font:600 13.5px 'Inter',system-ui,sans-serif;cursor:pointer;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:560px){.lgb{padding:6px 10px;font-size:13px;max-width:96px}}
+#lgi{text-align:left}#lgi h3{margin:0 0 6px;font:900 34px/1 'Barlow Condensed',Impact,sans-serif}#lgi p{color:var(--mute);margin:0 0 12px;font-size:15px}
+#lgi input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:13px 15px;width:100%;margin-bottom:10px}
+#lgi .lgt{display:flex;gap:8px;margin-bottom:16px}#lgi .lgt button{flex:1;font:inherit;font-weight:600;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:9px;cursor:pointer}#lgi .lgt button.on{background:var(--ember);color:#0a0c05;border-color:transparent}
+#lgi .lgm{color:var(--gold);min-height:20px;margin:0 0 10px}#lgi .btn{width:100%;border:0;font:inherit;font-weight:600;cursor:pointer}
+#lgi .fine{font-size:13px;color:var(--mute);margin-top:12px}
+.mr{display:grid;grid-template-columns:1fr auto auto auto;gap:14px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}.mr:last-child{border-bottom:0}
+.mr b{overflow-wrap:anywhere}.mr span{color:var(--mute);font-size:13px;white-space:nowrap}.mr .rm{font-size:12px;color:var(--mute);background:none;border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+@media(max-width:560px){.mr{grid-template-columns:1fr auto}.mr span{grid-column:1/-1}}
 </style>
 </head>
 <body>
-<nav><div class="wrap"><span class="logo"><i class="nl"></i>S8UL FAN HUB</span><div><a href="#about">About</a><a href="#news">News</a><a href="#vote">Voting</a><a href="#founders">Founders</a><a href="#teams">Teams</a><a href="#matches">Matches</a><a href="#creators">Creators</a><a href="#cards">Cards</a><a href="#honours">Honours</a><a href="#trophies">Trophies</a><a href="#journey">Journey</a><a href="#partners">Partners</a><a href="#wall">Fan wall</a><a href="#portfolio">Maker</a></div></div></nav>
+<nav><div class="wrap"><span class="logo"><i class="nl"></i>S8UL FAN HUB</span><div><a href="#about">About</a><a href="#news">News</a><a href="#vote">Voting</a><a href="#founders">Founders</a><a href="#teams">Teams</a><a href="#matches">Matches</a><a href="#creators">Creators</a><a href="#cards">Cards</a><a href="#honours">Honours</a><a href="#trophies">Trophies</a><a href="#journey">Journey</a><a href="#partners">Partners</a><a href="#wall">Fan wall</a><a href="#portfolio">Maker</a></div><button id="lgb" class="lgb" type="button">Login</button></div></nav>
 
 <div class="hero"><canvas id="c" aria-hidden="true"></canvas>
 <div class="wrap hg"><div class="ht">
@@ -425,6 +435,14 @@ nav .wrap>div{position:relative}
 
 <div class="mdl" id="mdl" role="dialog" aria-modal="true" aria-label="Details" hidden><div class="mbox"><button class="mx" type="button" aria-label="Close">&times;</button><div class="mbox-in"></div></div></div>
 
+<div class="mdl" id="lgm" role="dialog" aria-modal="true" aria-label="Login" hidden><div class="mbox"><button class="mx" type="button" aria-label="Close">&times;</button><div id="lgi"></div></div></div>
+
+<section id="members" hidden><div class="wrap">
+<h2>Members</h2>
+<p class="intro" id="mi">Only you can see this list. It shows who has created an account.</p>
+<div id="ml"></div>
+</div></section>
+
 <footer><div class="wrap">Unofficial fan-made site. Not affiliated with or endorsed by S8UL. All names and trademarks belong to their owners.</div></footer>
 
 <script>
@@ -438,6 +456,7 @@ window.API={
  del:function(kind,id){return fetch('/api/'+kind+'?id='+encodeURIComponent(id),{method:'DELETE',headers:hd()}).then(function(r){if(!r.ok)throw 0})}
 };
 hk();
+try{window.S8U=JSON.parse(localStorage.getItem('s8ul-fan-user')||'null')}catch(e){window.S8U=null}
 })();
 </script>
 <script>
@@ -698,7 +717,7 @@ function lbRender(){
  lbEl.appendChild(el('p','lbn','Names are chosen by fans. Cards are counted from each fan\u2019s own browser, and a fan can win at most one card a day.'));
  if(!lb.tok){
   var f=document.createElement('form');f.className='lbf';
-  var i=document.createElement('input');i.placeholder='Pick a name for the leaderboard';i.maxLength=20;i.required=true;i.setAttribute('aria-label','Leaderboard name');
+  var i=document.createElement('input');i.placeholder='Pick a name for the leaderboard';i.maxLength=20;i.required=true;if(window.S8U&&window.S8U.n)i.value=window.S8U.n;i.setAttribute('aria-label','Leaderboard name');
   var b=el('button','btn p','Join leaderboard');b.type='submit';var m=el('p','lbm','');
   f.appendChild(i);f.appendChild(b);f.appendChild(m);
   f.addEventListener('submit',function(e){e.preventDefault();var n=i.value.trim();if(n.length<2){m.textContent='Please use at least 2 characters.';return}
@@ -719,6 +738,7 @@ function lbRender(){
 function lbLoad(){API.get('leaderboard').then(function(items){lbOk=true;lbRows=items;lbRender();if(lbFirst){lbFirst=false;lbSync()}}).catch(function(){lbOk=false;lbRender()})}
 function lbSync(){if(!lb.tok||!lbOk)return;var s=stats();API.post('leaderboard',{tok:lb.tok,n:lb.n,c:s.c,t:s.t}).then(function(){return API.get('leaderboard')}).then(function(items){lbRows=items;lbRender()}).catch(function(){})}
 lbLoad();setInterval(lbLoad,120000);
+document.addEventListener('userchange',function(){if(!lb.tok)lbRender()});
 
 })();
 </script>
@@ -757,6 +777,66 @@ Object.keys(NOM).forEach(function(id){var box=document.getElementById(id);if(!bo
  if(u){var i=document.createElement('img');i.src=u;i.alt=n[0];ph.appendChild(i)}else ph.textContent=n[0].charAt(0);
  var tx=document.createElement('div');var b=document.createElement('b');b.textContent=n[0];var sp=document.createElement('span');sp.textContent=n[1];tx.appendChild(b);tx.appendChild(sp);
  row.appendChild(ph);row.appendChild(tx);box.appendChild(row)})});
+})();
+</script>
+<script>
+(function(){
+var K='s8ul-fan-user',me=window.S8U||null,mode='login';
+var btn=document.getElementById('lgb'),M=document.getElementById('lgm'),B=document.getElementById('lgi');
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function setMe(u){me=u;window.S8U=u;try{if(u)localStorage.setItem(K,JSON.stringify(u));else localStorage.removeItem(K)}catch(e){}paint()}
+function paint(){
+ btn.textContent=me?('Hi, '+me.n):'Login';
+ var n=document.getElementById('n');
+ if(n){if(me){n.value=me.n;n.readOnly=true}else if(n.readOnly){n.readOnly=false;n.value=''}}
+ document.dispatchEvent(new Event('userchange'))}
+function errText(err){var m=err&&err.message;return {
+ 'name taken':'That username is taken. Try another one, or login if it is yours.',
+ 'wrong':'Wrong username or PIN.',
+ 'locked':'Too many wrong tries. Please try again in 15 minutes.',
+ 'invalid name':'Username must be 3 to 20 letters, numbers, spaces, dots, dashes or underscores.',
+ 'invalid pin':'PIN must be exactly 4 digits.',
+ 'too many requests':'Please wait a minute and try again.'}[m]||'Login is not available right now. Please try again later.'}
+function openM(){
+ B.innerHTML='';
+ if(me){
+  B.appendChild(el('h3','','You are logged in'));
+  B.appendChild(el('p','','Logged in as '+me.n+'. Your name is filled in on the Fan wall and the Leaderboard.'));
+  var lo=el('button','btn p','Log out');lo.type='button';lo.addEventListener('click',function(){setMe(null);closeM()});B.appendChild(lo);
+ }else{
+  var tabs=el('div','lgt');
+  [['login','Login'],['register','Create account']].forEach(function(t){var b=el('button',mode===t[0]?'on':'',t[1]);b.type='button';b.addEventListener('click',function(){mode=t[0];openM()});tabs.appendChild(b)});
+  B.appendChild(tabs);
+  B.appendChild(el('h3','',mode==='login'?'Login':'Create account'));
+  var f=document.createElement('form'),u=document.createElement('input'),pn=document.createElement('input'),msg=el('p','lgm',''),sub=el('button','btn p',mode==='login'?'Login':'Create account');
+  u.placeholder='Username';u.maxLength=20;u.required=true;u.autocomplete='username';u.setAttribute('aria-label','Username');
+  pn.type='password';pn.placeholder='4-digit PIN';pn.maxLength=4;pn.required=true;pn.inputMode='numeric';pn.pattern='[0-9]{4}';pn.autocomplete=mode==='login'?'current-password':'new-password';pn.setAttribute('aria-label','4-digit PIN');
+  sub.type='submit';
+  f.appendChild(u);f.appendChild(pn);f.appendChild(msg);f.appendChild(sub);
+  f.addEventListener('submit',function(e){e.preventDefault();msg.textContent='';sub.disabled=true;
+   API.post('members',{action:mode,n:u.value.trim(),pin:pn.value}).then(function(r){setMe({n:r.n});openM()}).catch(function(err){msg.textContent=errText(err);sub.disabled=false})});
+  B.appendChild(f);
+  B.appendChild(el('p','fine','We save your username and a scrambled copy of your PIN so you can login on any device. Do not use a PIN you use anywhere else.'));
+  setTimeout(function(){u.focus()},30)}
+ M.hidden=false;document.body.style.overflow='hidden'}
+function closeM(){M.hidden=true;document.body.style.overflow=''}
+btn.addEventListener('click',openM);
+M.addEventListener('click',function(e){if(e.target===M||e.target.closest('.mx'))closeM()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!M.hidden)closeM()});
+paint();
+// admin: who has an account
+if(API.key()){
+ var sec=document.getElementById('members'),list=document.getElementById('ml'),info=document.getElementById('mi');
+ var nav=document.querySelector('nav .wrap>div');if(nav){var a=document.createElement('a');a.href='#members';a.textContent='Members';nav.appendChild(a)}
+ function fd(t){try{return new Date(t).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})}catch(e){return ''}}
+ function load(){API.get('members').then(function(items){
+  sec.hidden=false;info.textContent=items.length+' member'+(items.length===1?'':'s')+'. Only you can see this list.';list.innerHTML='';
+  var box=el('div','lbl');
+  if(!items.length)box.appendChild(el('div','empty','No one has created an account yet.'));
+  items.forEach(function(m){var r=el('div','mr');r.appendChild(el('b','',m.n));r.appendChild(el('span','','Joined '+fd(m.created)));r.appendChild(el('span','','Last login '+fd(m.last)+' ('+m.count+' logins)'));
+   var rm=el('button','rm','Remove');rm.type='button';rm.addEventListener('click',function(){if(confirm('Remove '+m.n+'?'))API.del('members',m.id).then(load).catch(function(){alert('Could not remove.')})});r.appendChild(rm);box.appendChild(r)});
+  list.appendChild(box)}).catch(function(){sec.hidden=false;info.textContent='Could not load the members list. Check the admin key and that the backend is deployed.'})}
+ load();setInterval(load,60000)}
 })();
 </script>
 </body>

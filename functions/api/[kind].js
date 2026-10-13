@@ -1,8 +1,10 @@
 // Cloudflare Pages Function: shared storage for the Fan wall, Match Center and card Leaderboard.
-// Routes: GET/POST/DELETE /api/wall, /api/matches and /api/leaderboard
+// Routes: GET/POST/DELETE /api/wall, /api/matches, /api/leaderboard and /api/members
 // Needs: a KV namespace bound as DATA, and an ADMIN_KEY secret (for moderation).
 
-const LIMITS = { wall: { max: 500 }, matches: { max: 300 }, leaderboard: { max: 1000 } };
+const LIMITS = { wall: { max: 500 }, matches: { max: 300 }, leaderboard: { max: 1000 }, members: { max: 5000 } };
+const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9 ._-]{1,18}[A-Za-z0-9]$/; // 3 to 20 characters
+const RESERVED = ['admin', 'administrator', 'moderator', 'owner', 's8ul', 'support'];
 const LAUNCH = Date.UTC(2026, 9, 10); // the card game started on 10 Oct 2026 (one card per day at most)
 
 const json = (obj, status = 200) =>
@@ -44,6 +46,16 @@ export async function onRequest({ request, env, params }) {
 
   if (request.method === 'GET') {
     const items = await read();
+    if (kind === 'members') {
+      // Only the admin can see who has an account. PIN hashes are never sent.
+      if (!isAdmin) return json({ error: 'forbidden' }, 403);
+      return json({
+        items: items
+          .slice()
+          .sort((a, b) => (b.last || 0) - (a.last || 0))
+          .map((x) => ({ id: x.id, n: x.n, created: x.created, last: x.last, count: x.count || 0 })),
+      });
+    }
     if (kind === 'leaderboard') {
       const top = items
         .slice()
@@ -59,6 +71,49 @@ export async function onRequest({ request, env, params }) {
     let b;
     try { b = await request.json(); } catch (e) { return json({ error: 'bad request' }, 400); }
     if (b && b.website) return json({ ok: true }); // honeypot: bots fill this hidden field
+
+    if (kind === 'members') {
+      // Username + 4-digit PIN accounts. Wrong PINs lock the account for 15 minutes after 5 tries.
+      const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+      const ck = 'mrl:' + ip;
+      const tries = parseInt((await env.DATA.get(ck)) || '0', 10);
+      if (tries >= 15) return json({ error: 'too many requests' }, 429);
+      await env.DATA.put(ck, String(tries + 1), { expirationTtl: 60 });
+
+      const n = clean(b.n, 20);
+      const pin = String(b.pin == null ? '' : b.pin);
+      if (!/^\d{4}$/.test(pin)) return json({ error: 'invalid pin' }, 400);
+      if (!NAME_RE.test(n)) return json({ error: 'invalid name' }, 400);
+      const nk = n.toLowerCase();
+      const items = await read();
+      const m = items.find((x) => x.nk === nk);
+
+      if (b.action === 'register') {
+        if (m || RESERVED.includes(nk)) return json({ error: 'name taken' }, 409);
+        const salt = crypto.randomUUID();
+        const now = Date.now();
+        items.unshift({
+          id: crypto.randomUUID(), n, nk, salt, ph: await sha256(salt + ':' + pin),
+          created: now, last: now, count: 1, fails: 0, lock: 0,
+        });
+        await write(items);
+        return json({ ok: true, n });
+      }
+      if (b.action === 'login') {
+        if (!m) return json({ error: 'wrong' }, 401);
+        if ((m.lock || 0) > Date.now()) return json({ error: 'locked' }, 423);
+        if ((await sha256(m.salt + ':' + pin)) !== m.ph) {
+          m.fails = (m.fails || 0) + 1;
+          if (m.fails >= 5) { m.lock = Date.now() + 15 * 60 * 1000; m.fails = 0; }
+          await write(items);
+          return json({ error: 'wrong' }, 401);
+        }
+        m.fails = 0; m.lock = 0; m.last = Date.now(); m.count = (m.count || 0) + 1;
+        await write(items);
+        return json({ ok: true, n: m.n });
+      }
+      return json({ error: 'bad request' }, 400);
+    }
 
     if (kind === 'leaderboard') {
       const tok = clean(b.tok, 64);
